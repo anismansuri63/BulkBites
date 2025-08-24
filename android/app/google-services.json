@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "208744369341",
+    "project_id": "bulkbites-236a8",
+    "storage_bucket": "bulkbites-236a8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:208744369341:android:bfdade4fe67b1a343cbbd4",
+        "android_client_info": {
+          "package_name": "com.whitehax.cyberbully"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANrld9-hapMIMmozZNjicKGy6BHTj5V9c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

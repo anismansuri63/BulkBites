@@ -1,0 +1,37 @@
+// ✅ THIS is required at the top level
+buildscript {
+    ext.kotlin_version = '2.0.21'
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.android.tools.build:gradle:8.0.2'
+        classpath 'com.google.gms:google-services:4.4.2'
+    }
+}
+
+// ✅ Optional for older Gradle versions, still safe to include
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+// ✅ Custom build dir settings (keep as-is if needed)
+rootProject.buildDir = "../build"
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(":app")
+}
+
+// ✅ Clean task
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
