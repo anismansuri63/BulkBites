@@ -1,60 +1,77 @@
+// customer.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Customer {
-  String id;
-  String name;
-  String mobile;
-  String addressLine1;
-  String addressLine2;
-  String shopName;
-  String city;
-  String state;
-  String pincode;
+  final String? id;
+  final String name;
+  final String mobile;
+  final List<String> orders; // Order IDs
+  final int totalOrders;
+  final double totalSpent;
+  final bool isActive;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
   Customer({
-    required this.id,
+    this.id,
     required this.name,
     required this.mobile,
-    required this.addressLine1,
-    required this.addressLine2,
-    required this.shopName,
-    required this.city,
-    required this.state,
-    required this.pincode,
+    this.orders = const [],
+    this.totalOrders = 0,
+    this.totalSpent = 0.0,
+    this.isActive = true,
+    this.createdAt,
+    this.updatedAt,
   });
+
+  factory Customer.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Customer(
+      id: doc.id,
+      name: data['name']?.toString() ?? '',
+      mobile: data['mobile']?.toString() ?? '',
+      orders: List<String>.from(data['orders'] ?? []),
+      totalOrders: (data['totalOrders'] as num?)?.toInt() ?? 0,
+      totalSpent: (data['totalSpent'] as num?)?.toDouble() ?? 0.0,
+      isActive: data['isActive'] ?? true,
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
+      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
       'name': name,
       'mobile': mobile,
-      'addressLine1': addressLine1,
-      'addressLine2': addressLine2,
-      'shopName': shopName,
-      'city': city,
-      'state': state,
-      'pincode': pincode,
+      'orders': orders,
+      'totalOrders': totalOrders,
+      'totalSpent': totalSpent,
+      'isActive': isActive,
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
+      'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
     };
   }
 
-  factory Customer.fromMap(Map<String, dynamic> map, String docId) {
+  Customer copyWith({
+    String? id,
+    String? name,
+    String? mobile,
+    List<String>? orders,
+    int? totalOrders,
+    double? totalSpent,
+    bool? isActive,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
     return Customer(
-      id: docId,
-      name: map['name'] ?? '',
-      mobile: map['mobile'] ?? '',
-      addressLine1: map['addressLine1'] ?? '',
-      addressLine2: map['addressLine2'] ?? '',
-      shopName: map['shopName'] ?? '',
-      city: map['city'] ?? '',
-      state: map['state'] ?? '',
-      pincode: map['pincode'] ?? '',
+      id: id ?? this.id,
+      name: name ?? this.name,
+      mobile: mobile ?? this.mobile,
+      orders: orders ?? this.orders,
+      totalOrders: totalOrders ?? this.totalOrders,
+      totalSpent: totalSpent ?? this.totalSpent,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
-  }
-
-  String get fullAddress {
-    return [
-      shopName,
-      "\n",
-      addressLine1,
-      addressLine2,
-
-      "$city, $state - $pincode"
-    ].where((e) => e.isNotEmpty).join(", ");
   }
 }
