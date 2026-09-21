@@ -60,6 +60,16 @@ class WhatsNewScreen extends StatelessWidget {
                       title: "Order Date",
                       description: "Order ID, date after 12 AM to close time",
                     ),
+                    _buildFeatureItem(
+                      icon: Icons.trending_up_rounded,
+                      title: "Product List",
+                      description: "UI updated",
+                    ),
+                    _buildFeatureItem(
+                      icon: Icons.trending_up_rounded,
+                      title: "Category List",
+                      description: "UI updated",
+                    ),
                   ],
                 ),
               ),

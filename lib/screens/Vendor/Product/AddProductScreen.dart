@@ -635,14 +635,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 // ==================================================
                 // BASIC INFORMATION
                 // ==================================================
-
                 Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
                     decoration: BoxDecoration(
                       color: AppColors.cardColor,
                       borderRadius: BorderRadius.circular(16),
@@ -717,7 +716,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
 
                 // ==================================================
                 // PRODUCT OPTIONS
@@ -775,7 +774,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                   style: TextStyle(color: Colors.white),
                                 ),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
+                                  backgroundColor: AppColors.secondary,
                                 ),
                               ),
                             ],
@@ -808,7 +807,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     ),
                   ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
 
                 // ==================================================
                 // IMAGES
@@ -884,7 +883,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                             style: TextStyle(color: Colors.white),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
+                            backgroundColor: AppColors.secondary,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 20,
@@ -911,8 +910,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   child: ElevatedButton(
                     onPressed: _isSaving ? null : _saveToFirestore,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          _isEditing ? AppColors.primary : AppColors.secondary,
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
@@ -1066,21 +1064,37 @@ class _AddProductScreenState extends State<AddProductScreen> {
       decoration: InputDecoration(
         labelText: 'Category',
         labelStyle: TextStyle(
-          color: AppColors.textColor,
+          color: AppColors.primary,
         ),
         filled: true,
         fillColor: AppColors.backgroundColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderSide:  BorderSide(
+            color: AppColors.textColor.withValues(alpha: 0.1),
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: AppColors.textColor.withValues(alpha: 0.1),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
+          borderSide: const BorderSide(
             color: AppColors.primary,
             width: 2,
           ),
         ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(
+            color: AppColors.error,
+            width: 1,
+          ),
+        ),
+
       ),
       hint: _isLoadingCategories
           ? const Text('Loading categories...')

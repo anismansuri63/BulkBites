@@ -3,7 +3,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../model/Customer.dart';
 import '../../services/FirestoreService.dart';
 import '../../utlity/AppColors.dart';
-import '../../widgets/CommonTextField.dart';
 import 'CustomerOrderListScreen.dart';
 import 'AddCustomerScreen.dart';
 
@@ -422,43 +421,48 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     final totalSpent = customer.totalSpent;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: AppColors.cardColor,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.textColor.withValues(alpha: 0.08),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CustomerOrderListScreen(
-                  customerId: customer.id!,
-                ),
-              ),
-            );
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Row(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
+          children: [
+            // Top Content (Tappable for Customer Orders)
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CustomerOrderListScreen(
+                      customerId: customer.id!,
+                    ),
+                  ),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
                   children: [
                     CircleAvatar(
                       radius: 24,
                       backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                       child: Text(
-                        customer.name.substring(0, 1).toUpperCase(),
+                        customer.name.isNotEmpty
+                            ? customer.name.substring(0, 1).toUpperCase()
+                            : 'C',
                         style: const TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.bold,
@@ -466,7 +470,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -497,43 +501,118 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                const Divider(height: 1),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildStatItem(
-                      label: "Orders",
-                      value: orderCount.toString(),
-                      icon: Icons.shopping_bag_outlined,
-                    ),
-                    _buildStatItem(
-                      label: "Total Spent",
-                      value: "₹${totalSpent.toStringAsFixed(0)}",
-                      icon: Icons.currency_rupee,
-                    ),
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined, color: AppColors.primary, size: 20),
-                          onPressed: () => _openAddCustomer(context, customer: customer),
-                          constraints: const BoxConstraints(),
-                          padding: const EdgeInsets.all(8),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
-                          onPressed: () => _deleteCustomer(context, customer),
-                          constraints: const BoxConstraints(),
-                          padding: const EdgeInsets.all(8),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
+              ),
             ),
-          ),
+
+            // Divider
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: AppColors.textColor.withValues(alpha: 0.06),
+            ),
+
+            // Bottom Action Footer Bar with Stats & Buttons
+            Container(
+              color: AppColors.backgroundColor.withValues(alpha: 0.4),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      _buildStatItem(
+                        label: "Orders",
+                        value: orderCount.toString(),
+                      ),
+                      const SizedBox(width: 12),
+                      _buildStatItem(
+                        label: "Spent",
+                        value: "₹${totalSpent.toStringAsFixed(0)}",
+                      ),
+                    ],
+                  ),
+
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Edit Button
+                      InkWell(
+                        onTap: () =>
+                            _openAddCustomer(context, customer: customer),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(
+                                Icons.edit_outlined,
+                                size: 15,
+                                color: AppColors.primary,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                "Edit",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 8),
+
+                      // Delete Button
+                      InkWell(
+                        onTap: () => _deleteCustomer(context, customer),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(
+                                Icons.delete_outline,
+                                size: 15,
+                                color: AppColors.error,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                "Delete",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.error,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -554,10 +633,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     );
   }
 
-  Widget _buildStatItem({required String label, required String value, required IconData icon}) {
+  Widget _buildStatItem({required String label, required String value}) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: Colors.grey),
         const SizedBox(width: 4),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,

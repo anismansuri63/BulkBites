@@ -36,6 +36,8 @@ class _TakeOrderScreenState extends State<TakeOrderScreen> {
   String? _selectedCategoryId;
   bool _isProgrammaticScroll = false;
   DateTime? _orderDate;
+  bool _isCategoryBarExpanded = false;
+  final Set<String> _collapsedCategoryIds = {};
 
   // ============================================================
   // SCROLL CONTROLLERS
@@ -208,11 +210,15 @@ class _TakeOrderScreenState extends State<TakeOrderScreen> {
   // ============================================================
 
   Future<void> _selectCategory(String categoryId) async {
-    if (_selectedCategoryId == categoryId) return;
-
     setState(() {
       _selectedCategoryId = categoryId;
       _isProgrammaticScroll = true;
+      if (_collapsedCategoryIds.contains(categoryId)) {
+        _collapsedCategoryIds.remove(categoryId);
+      }
+      if (_isCategoryBarExpanded) {
+        _isCategoryBarExpanded = false;
+      }
     });
 
     _scrollCategoryChipIntoView(categoryId);
@@ -609,55 +615,223 @@ class _TakeOrderScreenState extends State<TakeOrderScreen> {
   // ============================================================
 
   Widget _buildCategoryBar() {
+    final List<Widget> chipWidgets = [
+      if (_demandProducts.isNotEmpty)
+        _buildCategoryChip(
+          id: 'demand',
+          name: 'Demand',
+          isSelected: _selectedCategoryId == 'demand',
+          count: _demandProducts.length,
+          icon: Icons.local_fire_department_rounded,
+        ),
+      ..._categories.map((category) {
+        final count = _productsForCategory(category.id).length;
+        if (count == 0) return const SizedBox.shrink();
+        return _buildCategoryChip(
+          id: category.id,
+          name: category.name,
+          isSelected: _selectedCategoryId == category.id,
+          count: count,
+        );
+      }),
+    ];
+
     return Container(
-      height: 58,
       decoration: BoxDecoration(
         color: AppColors.cardColor,
         boxShadow: const [
           BoxShadow(
             color: Colors.black12,
-            blurRadius: 5,
+            blurRadius: 4,
             offset: Offset(0, 2),
           ),
         ],
       ),
-      child: ListView(
-        controller: _categoryScrollController,
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          if (_demandProducts.isNotEmpty)
-            _buildCategoryChip('demand', 'Demand', _selectedCategoryId == 'demand'),
-          ..._categories.map((category) => _buildCategoryChip(category.id, category.name, _selectedCategoryId == category.id)),
+          // Main Bar with Horizontal Scroll + Expand Toggle Button
+          SizedBox(
+            height: 52,
+            child: Row(
+              children: [
+                // Horizontal Chips List
+                Expanded(
+                  child: ListView(
+                    controller: _categoryScrollController,
+                    scrollDirection: Axis.horizontal,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    children: chipWidgets,
+                  ),
+                ),
+
+                // Vertical Divider
+                Container(
+                  height: 24,
+                  width: 1,
+                  color: AppColors.textColor.withValues(alpha: 0.12),
+                ),
+
+                // Expand / Collapse Category Grid Button
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      _isCategoryBarExpanded = !_isCategoryBarExpanded;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 12),
+                    child: AnimatedRotation(
+                      turns: _isCategoryBarExpanded ? 0.5 : 0.0,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
+                      child: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: _isCategoryBarExpanded
+                            ? AppColors.primary
+                            : AppColors.textColor.withValues(alpha: 0.7),
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Expanded Wrap Panel (Shown when user taps expand toggle button)
+          if (_isCategoryBarExpanded)
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
+              decoration: BoxDecoration(
+                color: AppColors.cardColor,
+                border: Border(
+                  top: BorderSide(
+                    color: AppColors.textColor.withValues(alpha: 0.08),
+                  ),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'ALL CATEGORIES',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textColor.withValues(alpha: 0.5),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _isCategoryBarExpanded = false;
+                          });
+                        },
+                        child: const Text(
+                          'Close',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: chipWidgets,
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildCategoryChip(String id, String name, bool isSelected) {
+  Widget _buildCategoryChip({
+    required String id,
+    required String name,
+    required bool isSelected,
+    required int count,
+    IconData? icon,
+  }) {
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.only(right: 6),
       child: GestureDetector(
         onTap: () => _selectCategory(id),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primary : AppColors.backgroundColor,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isSelected
                   ? AppColors.primary
-                  : AppColors.textColor.withValues(alpha: 0.15),
+                  : AppColors.textColor.withValues(alpha: 0.12),
+              width: isSelected ? 1.5 : 1.0,
             ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.25),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
           ),
-          child: Text(
-            name,
-            style: TextStyle(
-              color: isSelected ? Colors.white : AppColors.textColor,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              fontSize: 14,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                Icon(
+                  icon,
+                  size: 15,
+                  color: isSelected ? Colors.white : Colors.orange,
+                ),
+                const SizedBox(width: 5),
+              ],
+              Text(
+                name,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : AppColors.textColor,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Colors.white.withValues(alpha: 0.25)
+                      : AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '$count',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected ? Colors.white : AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -708,66 +882,110 @@ class _TakeOrderScreenState extends State<TakeOrderScreen> {
   // ============================================================
 
   Widget _buildDemandSection(CartManager cartManager) {
+    final isCollapsed = _collapsedCategoryIds.contains('demand');
+
     return Container(
       key: _categoryKeys['demand'],
-      margin: const EdgeInsets.only(bottom: 24),
+      margin: const EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 8, bottom: 16),
-            child: Row(
-              children: [
-                Container(
-                  width: 4,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: Colors.orange,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  "High Demand",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textColor,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Icon(Icons.trending_up, color: Colors.orange, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Divider(
-                    color: Colors.orange.withValues(alpha: 0.1),
-                    thickness: 1,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              childAspectRatio: 0.75,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-            ),
-            itemCount: _demandProducts.length,
-            itemBuilder: (context, index) {
-              final product = _demandProducts[index];
-              return _ProductGridItem(
-                product: product,
-                onTap: () {
-                  _openProduct(product);
-                },
-              );
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                if (isCollapsed) {
+                  _collapsedCategoryIds.remove('demand');
+                } else {
+                  _collapsedCategoryIds.add('demand');
+                }
+              });
             },
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    "High Demand",
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textColor,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Icon(Icons.local_fire_department_rounded,
+                      color: Colors.orange, size: 18),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${_demandProducts.length}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Divider(
+                      color: Colors.orange.withValues(alpha: 0.15),
+                      thickness: 1,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  AnimatedRotation(
+                    turns: isCollapsed ? -0.25 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    child: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: AppColors.textColor.withValues(alpha: 0.6),
+                      size: 22,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
+          if (!isCollapsed)
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                childAspectRatio: 0.75,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+              ),
+              itemCount: _demandProducts.length,
+              itemBuilder: (context, index) {
+                final product = _demandProducts[index];
+                return _ProductGridItem(
+                  product: product,
+                  onTap: () {
+                    _openProduct(product);
+                  },
+                );
+              },
+            ),
         ],
       ),
     );
@@ -778,73 +996,116 @@ class _TakeOrderScreenState extends State<TakeOrderScreen> {
   // ============================================================
 
   Widget _buildCategorySection(
-      Category category,
-      CartManager cartManager,
-      ) {
+    Category category,
+    CartManager cartManager,
+  ) {
     final products = _productsForCategory(category.id);
 
     if (products.isEmpty) {
       return const SizedBox.shrink();
     }
 
+    final isCollapsed = _collapsedCategoryIds.contains(category.id);
+
     return Container(
       key: _categoryKeys[category.id],
-      margin: const EdgeInsets.only(bottom: 24),
+      margin: const EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 8, bottom: 16),
-            child: Row(
-              children: [
-                Container(
-                  width: 4,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  category.name,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textColor,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Divider(
-                    color: AppColors.textColor.withValues(alpha: 0.1),
-                    thickness: 1,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              childAspectRatio: 0.75,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-            ),
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              final product = products[index];
-              return _ProductGridItem(
-                product: product,
-                onTap: () {
-                  _openProduct(product);
-                },
-              );
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                if (isCollapsed) {
+                  _collapsedCategoryIds.remove(category.id);
+                } else {
+                  _collapsedCategoryIds.add(category.id);
+                }
+              });
             },
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    category.name,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textColor,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${products.length}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Divider(
+                      color: AppColors.textColor.withValues(alpha: 0.12),
+                      thickness: 1,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  AnimatedRotation(
+                    turns: isCollapsed ? -0.25 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    child: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: AppColors.textColor.withValues(alpha: 0.6),
+                      size: 22,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
+          if (!isCollapsed)
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                childAspectRatio: 0.75,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+              ),
+              itemCount: products.length,
+              itemBuilder: (context, index) {
+                final product = products[index];
+                return _ProductGridItem(
+                  product: product,
+                  onTap: () {
+                    _openProduct(product);
+                  },
+                );
+              },
+            ),
         ],
       ),
     );
@@ -1068,6 +1329,7 @@ class _ProductGridItem extends StatelessWidget {
                           width: 1,
                         ),
                       ),
+
                       child: Row(
                         children: [
                           Expanded(
@@ -1172,20 +1434,20 @@ class _ProductGridItem extends StatelessWidget {
               ),
             ),
             // INFO SECTION
+
             Padding(
               padding: const EdgeInsets.fromLTRB(8, 4, 8, 6),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
+                    //text:
                     product.productName,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 11,
                       color: AppColors.textColor,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 1),
                   Text(
@@ -1220,6 +1482,97 @@ class _ProductGridItem extends StatelessWidget {
         Icons.image_outlined,
         color: AppColors.textColor.withValues(alpha: 0.2),
         size: 32,
+      ),
+    );
+  }
+}
+
+// ============================================================
+// MARQUEE TEXT WIDGET
+// ============================================================
+
+class MarqueeText extends StatefulWidget {
+  final String text;
+  final TextStyle? style;
+
+  const MarqueeText({
+    super.key,
+    required this.text,
+    this.style,
+  });
+
+  @override
+  State<MarqueeText> createState() => _MarqueeTextState();
+}
+
+class _MarqueeTextState extends State<MarqueeText> {
+  final ScrollController _scrollController = ScrollController();
+  bool _scrolling = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startScrolling();
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant MarqueeText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.text != widget.text) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(0);
+      }
+    }
+  }
+
+  void _startScrolling() async {
+    if (_scrolling) return;
+    _scrolling = true;
+
+    while (mounted) {
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted || !_scrollController.hasClients) break;
+
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      if (maxScroll <= 0) {
+        await Future.delayed(const Duration(seconds: 1));
+        continue;
+      }
+
+      await _scrollController.animateTo(
+        maxScroll,
+        duration: Duration(
+          milliseconds: (maxScroll * 40).toInt().clamp(1000, 10000),
+        ),
+        curve: Curves.linear,
+      );
+
+      await Future.delayed(const Duration(seconds: 1));
+      if (!mounted || !_scrollController.hasClients) break;
+
+      _scrollController.jumpTo(0);
+    }
+    _scrolling = false;
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      controller: _scrollController,
+      scrollDirection: Axis.horizontal,
+      physics: const NeverScrollableScrollPhysics(),
+      child: Text(
+        widget.text,
+        style: widget.style,
+        maxLines: 1,
       ),
     );
   }

@@ -621,9 +621,9 @@ class _OrderListScreenState extends State<OrderListScreen> {
 
   Widget _buildSmallTotalBadge(String text, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(4),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
@@ -1314,7 +1314,7 @@ class _OrderCard extends StatelessWidget {
                 ? Border.all(color: AppColors.primary, width: 1.5)
                 : null,
           ),
-          padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+          padding: const EdgeInsets.fromLTRB(10, 0, 0, 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1386,7 +1386,7 @@ class _OrderCard extends StatelessWidget {
                 children: [
                   Icon(Icons.person_outline,
                       size: 16, color: AppColors.primary),
-                  const SizedBox(width: 3),
+                  const SizedBox(width: 1),
                   Expanded(
                     child: Text(
                       "$customerName - [${order.customerMobile ?? 'N/A'}]",
@@ -1504,9 +1504,9 @@ class _OrderCard extends StatelessWidget {
               ),
               const SizedBox(height: 1),
               const Divider(height: 1, thickness: 0.5),
-              const SizedBox(height: 2),
+              const SizedBox(height: 5),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Text(
                     "Total Amount",
@@ -1516,6 +1516,7 @@ class _OrderCard extends StatelessWidget {
                       color: AppColors.textColor.withValues(alpha: 0.7),
                     ),
                   ),
+                  Spacer(),
                   Text(
                     "₹${totalAmount.toStringAsFixed(0)}",
                     style: TextStyle(
@@ -1524,6 +1525,7 @@ class _OrderCard extends StatelessWidget {
                       color: AppColors.primary,
                     ),
                   ),
+                  const SizedBox(width: 10),
                 ],
               ),
             ],

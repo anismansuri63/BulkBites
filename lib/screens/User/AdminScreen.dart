@@ -33,8 +33,8 @@ class _AdminScreenState extends State<AdminScreen> {
 
   final List<String> _pageTitles = [
     "Take Order",
-    "Products",
     "Orders",
+    "Products",
     "Shop Profile",
     "Sales Reports",
     "Sales Reports Insights",
@@ -167,11 +167,12 @@ class _AdminScreenState extends State<AdminScreen> {
       _loadUserData();
     }
   }
-
   @override
   Widget build(BuildContext context) {
     final bool showAdminAppBar = _selectedIndex != 3;
-
+    print("Admin - ${_pageTitles[_selectedIndex]}");
+    print(_pageTitles);
+    print(_selectedIndex);
     return Scaffold(
       appBar: showAdminAppBar
           ? AppBar(
@@ -190,7 +191,7 @@ class _AdminScreenState extends State<AdminScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const AddCategoryScreen()),
+                            builder: (context) => const CategoryListScreen()),
                       );
                     },
                     tooltip: "Add Category",
